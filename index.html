@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinSight — Financial Research Swarm</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #07090d;
+    --bg2: #0d1117;
+    --bg3: #131920;
+    --border: rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.15);
+    --text: #e8edf2;
+    --muted: #6b7a8d;
+    --accent: #00d4aa;
+    --accent2: #f5a623;
+    --danger: #e05252;
+    --success: #4ade80;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid lines background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .header-meta {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    gap: 20px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    overflow-x: auto;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Main query area */
+  .query-section {
+    padding: 40px 0 32px;
+  }
+
+  .query-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .query-label span {
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  .query-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .query-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .query-input::placeholder { color: var(--muted); }
+
+  .query-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,170,0.08);
+  }
+
+  .run-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 14px 28px;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .run-btn:hover { opacity: 0.88; }
+  .run-btn:active { transform: scale(0.97); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .quick-queries {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .quick-chip {
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    background: none;
+    font-family: var(--mono);
+  }
+
+  .quick-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Agent progress */
+  #progress {
+    display: none;
+    padding: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 32px;
+  }
+
+  .progress-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .agent-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .agent-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .step-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .step-icon.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,212,170,0.1);
+  }
+
+  .step-icon.done {
+    border-color: var(--success);
+    background: rgba(74,222,128,0.1);
+    color: var(--success);
+  }
+
+  .step-label { color: var(--muted); transition: color 0.3s; }
+  .step-label.active { color: var(--text); }
+
+  /* Brief output */
+  #brief-output { display: none; animation: fadeUp 0.4s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Rating badge */
+  .brief-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .brief-title {
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .brief-ticker {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .rating-badge {
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  .rating-BUY  { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+  .rating-SELL { background: rgba(224,82,82,0.15);  color: var(--danger);  border: 1px solid rgba(224,82,82,0.3); }
+  .rating-HOLD { background: rgba(245,166,35,0.12); color: var(--accent2); border: 1px solid rgba(245,166,35,0.25); }
+  .rating-WATCH{ background: rgba(0,212,170,0.1);   color: var(--accent);  border: 1px solid rgba(0,212,170,0.2); }
+
+  /* Summary */
+  .brief-summary {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c8d0da;
+    padding: 16px 20px;
+    background: var(--bg2);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 28px;
+  }
+
+  /* Metrics grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .metric-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    transition: border-color 0.2s;
+  }
+
+  .metric-card:hover { border-color: var(--border-hi); }
+
+  .metric-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .metric-trend {
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .trend-up   { color: var(--success); }
+  .trend-down { color: var(--danger); }
+  .trend-flat { color: var(--muted); }
+
+  /* Two column risks/signals */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  .list-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+  }
+
+  .list-heading {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .list-heading.risks  { color: var(--danger); }
+  .list-heading.signals{ color: var(--success); }
+
+  .brief-list { list-style: none; }
+
+  .brief-list li {
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    color: #b0bac6;
+  }
+
+  .brief-list li:last-child { border-bottom: none; }
+
+  .brief-list li::before {
+    flex-shrink: 0;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .risks   .brief-list li::before { content: '⚠'; color: var(--danger); }
+  .signals .brief-list li::before { content: '↑'; color: var(--success); }
+
+  /* Verdict */
+  .verdict {
+    background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(0,212,170,0.03));
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .verdict-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .verdict-text {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .brief-footer {
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Error state */
+  #error-state {
+    display: none;
+    padding: 20px;
+    background: rgba(224,82,82,0.08);
+    border: 1px solid rgba(224,82,82,0.2);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--danger);
+    margin-bottom: 24px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">FS</div>
+      <div class="logo-text">Fin<span>Sight</span></div>
+    </div>
+    <div class="header-meta">FINANCIAL RESEARCH SWARM · TRACK A</div>
+  </header>
+
+  <div class="status-bar">
+    <div class="status-item"><div class="dot"></div> SCRAPER AGENT ONLINE</div>
+    <div class="status-item"><div class="dot" style="animation-delay:0.5s"></div> ANALYST AGENT ONLINE</div>
+    <div class="status-item"><div class="dot" style="animation-delay:1s"></div> REPORTER AGENT ONLINE</div>
+    <div class="status-item">WEB SEARCH ENABLED</div>
+    <div class="status-item">MODEL: claude-sonnet-4</div>
+  </div>
+
+  <section class="query-section">
+    <div class="query-label"><span>›</span> RESEARCH QUERY</div>
+    <div class="query-row">
+      <input
+        type="text"
+        class="query-input"
+        id="query-input"
+        placeholder="e.g. Analyze NVIDIA earnings Q4 2024..."
+        maxlength="500"
+      />
+      <button class="run-btn" id="run-btn" onclick="runResearch()">RUN SWARM</button>
+    </div>
+    <div class="quick-queries">
+      <button class="quick-chip" onclick="setQuery('Analyze Apple AAPL latest earnings and outlook')">AAPL</button>
+      <button class="quick-chip" onclick="setQuery('Research NVIDIA NVDA AI chip demand and competitive position')">NVDA</button>
+      <button class="quick-chip" onclick="setQuery('Evaluate Microsoft MSFT cloud growth and AI monetization')">MSFT</button>
+      <button class="quick-chip" onclick="setQuery('Assess Tesla TSLA delivery numbers and margin trends')">TSLA</button>
+      <button class="quick-chip" onclick="setQuery('Analyze Amazon AMZN AWS performance and retail profitability')">AMZN</button>
+    </div>
+  </section>
+
+  <!-- Agent progress -->
+  <div id="progress">
+    <div class="progress-title">SWARM EXECUTING</div>
+    <div class="agent-steps">
+      <div class="agent-step" id="step-scraper">
+        <div class="step-icon" id="icon-scraper">S</div>
+        <div class="step-label" id="label-scraper">Scraper Agent — gathering SEC filings, news, earnings data...</div>
+      </div>
+      <div class="agent-step" id="step-analyst">
+        <div class="step-icon" id="icon-analyst">A</div>
+        <div class="step-label" id="label-analyst">Analyst Agent — synthesizing trends, risks, signals...</div>
+      </div>
+      <div class="agent-step" id="step-reporter">
+        <div class="step-icon" id="icon-reporter">R</div>
+        <div class="step-label" id="label-reporter">Reporter Agent — structuring investment brief...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div id="error-state"></div>
+
+  <!-- Brief output -->
+  <div id="brief-output">
+    <div class="brief-header">
+      <div>
+        <div class="brief-title" id="brief-title"></div>
+        <div class="brief-ticker" id="brief-ticker"></div>
+      </div>
+      <div class="rating-badge" id="rating-badge"></div>
+    </div>
+
+    <div class="brief-summary" id="brief-summary"></div>
+
+    <div class="metrics-grid" id="metrics-grid"></div>
+
+    <div class="two-col">
+      <div class="list-section risks">
+        <div class="list-heading risks">RISK FACTORS</div>
+        <ul class="brief-list" id="risks-list"></ul>
+      </div>
+      <div class="list-section signals">
+        <div class="list-heading signals">BULLISH SIGNALS</div>
+        <ul class="brief-list" id="signals-list"></ul>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-label">SWARM VERDICT</div>
+      <div class="verdict-text" id="verdict-text"></div>
+    </div>
+
+    <div class="brief-footer">
+      <span id="generated-at"></span>
+      <span>FINSIGHT SWARM v1.0 · NOT FINANCIAL ADVICE</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // CONFIG: set this to your Cloud Run backend URL
+  const API_BASE = window.API_BASE || "http://localhost:8080";
+
+  function setQuery(q) {
+    document.getElementById("query-input").value = q;
+    document.getElementById("query-input").focus();
+  }
+
+  function setStep(stepId, state) {
+    const icon = document.getElementById(`icon-${stepId}`);
+    const label = document.getElementById(`label-${stepId}`);
+    icon.className = `step-icon ${state}`;
+    label.className = `step-label ${state === 'active' ? 'active' : ''}`;
+  }
+
+  async function runResearch() {
+    const query = document.getElementById("query-input").value.trim();
+    if (!query) return;
+
+    const btn = document.getElementById("run-btn");
+    btn.disabled = true;
+    btn.textContent = "RUNNING...";
+
+    document.getElementById("brief-output").style.display = "none";
+    document.getElementById("error-state").style.display = "none";
+
+    const progress = document.getElementById("progress");
+    progress.style.display = "block";
+
+    // Reset steps
+    ["scraper", "analyst", "reporter"].forEach(s => setStep(s, ""));
+
+    // Animate steps
+    setStep("scraper", "active");
+    await sleep(1200);
+    setStep("scraper", "done");
+    setStep("analyst", "active");
+    await sleep(1200);
+    setStep("analyst", "done");
+    setStep("reporter", "active");
+
+    try {
+      const res = await fetch(`${API_BASE}/research`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
+      });
+
+      const data = await res.json();
+
+      setStep("reporter", "done");
+      await sleep(400);
+      progress.style.display = "none";
+
+      if (data.success && data.brief) {
+        renderBrief(data.brief);
+      } else {
+        showError(data.error || "Unknown error from swarm.");
+      }
+
+    } catch (err) {
+      setStep("reporter", "done");
+      progress.style.display = "none";
+      // Fallback to demo for hackathon demo mode
+      await loadDemo();
+    }
+
+    btn.disabled = false;
+    btn.textContent = "RUN SWARM";
+  }
+
+  async function loadDemo() {
+    try {
+      const res = await fetch(`${API_BASE}/demo`);
+      const data = await res.json();
+      if (data.success) renderBrief(data.brief);
+      else showError("Could not load demo brief.");
+    } catch {
+      showError("Could not reach the FinSight API. Make sure the backend is running.");
+    }
+  }
+
+  function renderBrief(brief) {
+    document.getElementById("brief-title").textContent = brief.title || "Research Brief";
+    document.getElementById("brief-ticker").textContent = brief.ticker ? `${brief.ticker} · Generated by FinSight Swarm` : "";
+
+    const badge = document.getElementById("rating-badge");
+    badge.textContent = brief.rating || "WATCH";
+    badge.className = `rating-badge rating-${brief.rating || "WATCH"}`;
+
+    document.getElementById("brief-summary").textContent = brief.summary || "";
+
+    // Metrics
+    const grid = document.getElementById("metrics-grid");
+    grid.innerHTML = "";
+    (brief.key_metrics || []).forEach(m => {
+      const trendClass = `trend-${m.trend || "flat"}`;
+      const trendSymbol = m.trend === "up" ? "▲" : m.trend === "down" ? "▼" : "—";
+      grid.innerHTML += `
+        <div class="metric-card">
+          <div class="metric-label">${m.label}</div>
+          <div class="metric-value">${m.value}</div>
+          <div class="metric-trend ${trendClass}">${trendSymbol} ${m.trend || "stable"}</div>
+        </div>`;
+    });
+
+    // Risks
+    const rList = document.getElementById("risks-list");
+    rList.innerHTML = "";
+    (brief.risks || []).forEach(r => {
+      rList.innerHTML += `<li><span>${r}</span></li>`;
+    });
+
+    // Signals
+    const sList = document.getElementById("signals-list");
+    sList.innerHTML = "";
+    (brief.signals || []).forEach(s => {
+      sList.innerHTML += `<li><span>${s}</span></li>`;
+    });
+
+    document.getElementById("verdict-text").textContent = brief.verdict || "";
+    document.getElementById("generated-at").textContent =
+      brief.generated_at ? `Generated: ${new Date(brief.generated_at).toLocaleString()}` : "";
+
+    const output = document.getElementById("brief-output");
+    output.style.display = "block";
+    output.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error-state");
+    el.textContent = `⚠ Swarm error: ${msg}`;
+    el.style.display = "block";
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // Allow Enter key to submit
+  document.getElementById("query-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") runResearch();
+  });
+</script>
+</body>
+</html>
